@@ -12,7 +12,7 @@ type Node struct {
 	Orientation string `json:"orientation"`
 	Type string        `json:"type"`
 	Focused bool       `json:"focused"`
-	Nodes []Node       `json:"nodes"`
+	Children []Node       `json:"nodes"`
 }
 
 func get_layout() Node {
@@ -30,7 +30,7 @@ func get_layout() Node {
 func find_focused_window(node Node, parent Node) Node {
 	node.Parent = &parent 
 	if node.Focused == false {
-		for _, child := range (node.Nodes) {
+		for _, child := range (node.Children) {
 			current_node := find_focused_window(child, node)
 			if current_node.Focused == false {
 				continue
@@ -46,7 +46,7 @@ func is_left_most_window(window Node) bool {
 	parent := *window.Parent
     if window.Type == "workspace" {
 		return true
-	} else if parent.Orientation == "horizontal" && window.ID != parent.Nodes[0].ID {
+	} else if parent.Orientation == "horizontal" && window.ID != parent.Children[0].ID {
 		return false
 	}
 	return is_left_most_window(parent)
@@ -56,7 +56,7 @@ func is_right_most_window(window Node) bool {
 	parent := *window.Parent
     if window.Type == "workspace" {
 		return true
-	} else if parent.Orientation == "horizontal" && window.ID != parent.Nodes[len(parent.Nodes)-1].ID {
+	} else if parent.Orientation == "horizontal" && window.ID != parent.Children[len(parent.Children)-1].ID {
 		return false
 	}
 	return is_right_most_window(parent)
