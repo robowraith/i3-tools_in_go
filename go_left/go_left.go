@@ -7,6 +7,7 @@ import (
 )
 
 type Node struct {
+	ID int64           `json:"id"`
 	Parent *Node
 	Orientation string `json:"orientation"`
 	Type string        `json:"type"`
@@ -15,7 +16,6 @@ type Node struct {
 }
 
 func get_layout() Node {
-	fmt.Println("get_layout")
 	layout := Node{}
 	
 	layout_json, err := exec.Command("i3-msg", "-t", "get_tree").Output()
@@ -24,20 +24,18 @@ func get_layout() Node {
     }
 	
 	_ = json.Unmarshal([]byte(layout_json), &layout)
-	
 	return layout
 }
 
 func find_focused_window(node Node, parent Node) Node {
-	fmt.Printf("find_focused_window(%v, %v)\n", node.Type, node.Focused)
-    node.Parent = &parent
+	node.Parent = &parent 
 	if node.Focused == false {
-		for _, node := range (node.Nodes) {
-			node := find_focused_window(node, parent)
-			if node.Focused == false {
+		for _, child := range (node.Nodes) {
+			current_node := find_focused_window(child, node)
+			if current_node.Focused == false {
 				continue
 			} else {
-				return node
+				return current_node
 			}
 		}
 	}
@@ -45,25 +43,23 @@ func find_focused_window(node Node, parent Node) Node {
 }
 
 func is_left_most_window(window Node) bool {
-	fmt.Printf("is_left_most_window(%v %v)\n", window.Type, window.Focused)
-	parent := window.Parent
+	parent := *window.Parent
     if window.Type == "workspace" {
 		return true
-	} else if parent.Orientation == "horizontal" && &window != &parent.Nodes[0] {
+	} else if parent.Orientation == "horizontal" && window.ID != parent.Nodes[0].ID {
 		return false
 	}
-	return is_left_most_window(*parent)
+	return is_left_most_window(parent)
 }
 
 func is_right_most_window(window Node) bool {
+	parent := *window.Parent
     if window.Type == "workspace" {
 		return true
+	} else if parent.Orientation == "horizontal" && window.ID != parent.Nodes[len(parent.Nodes)-1].ID {
+		return false
 	}
-	parent := window.Parent
-	if parent.Orientation == "horizontal" && &window == &parent.Nodes[len(parent.Nodes)-1] {
-		return true
-	}
-	return is_right_most_window(*parent)
+	return is_right_most_window(parent)
 }
 
 func go_all_the_way_right() {
@@ -80,25 +76,26 @@ func go_all_the_way_right() {
 }
 
 func focus_left() {
-    exec.Command("i3-msg", "-t", "focus", "left")
+    exec.Command("i3-msg", "focus", "left").Run()
 }
 
 func focus_right() {
-    exec.Command("i3-msg", "-t", "focus", "right")
+    exec.Command("i3-msg", "focus", "right").Run()
 }
 
-func workspace_prev() { 
-    exec.Command("i3-msg", "-t", "workspace", "prev")
+func workspace_prev() {
+    exec.Command("i3-msg", "workspace", "prev").Run()
 }
 
 func main()  {
 	parent := Node {
+		ID: 00000001,
 	    Orientation: "",
 	}
 
 	focused_window := find_focused_window(get_layout(), parent)
 
-	if is_left_most_window(focused_window) {
+	if is_left_most_window(focused_window) == true {
 		workspace_prev()
 		go_all_the_way_right()
 	} else {
