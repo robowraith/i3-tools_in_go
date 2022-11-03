@@ -12,23 +12,23 @@ type Node struct {
 	Orientation string `json:"orientation"`
 	Type string        `json:"type"`
 	Focused bool       `json:"focused"`
-	Children []Node       `json:"nodes"`
+	Children []Node    `json:"nodes"`
 }
 
 func get_layout() Node {
 	layout := Node{}
-	
+
 	layout_json, err := exec.Command("i3-msg", "-t", "get_tree").Output()
 	if err != nil {
         fmt.Println(err)
     }
-	
+
 	_ = json.Unmarshal([]byte(layout_json), &layout)
 	return layout
 }
 
 func find_focused_window(node Node, parent Node) Node {
-	node.Parent = &parent 
+	node.Parent = &parent
 	if node.Focused == false {
 		for _, child := range (node.Children) {
 			current_node := find_focused_window(child, node)
@@ -66,13 +66,13 @@ func go_all_the_way_right() {
 	parent := Node {
 	    Orientation: "",
 	}
-    
+
 	focused_window := find_focused_window(get_layout(), parent)
-	
+
 	if ! is_right_most_window(focused_window) {
 		focus_right()
 		go_all_the_way_right()
-	}	
+	}
 }
 
 func focus_left() {

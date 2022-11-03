@@ -29,19 +29,19 @@ func workspace_next() {
 
 func get_layout() Node {
 	layout := Node{}
-	
+
 	layout_json, err := exec.Command("i3-msg", "-t", "get_tree").Output()
 	if err != nil {
         fmt.Println(err)
     }
-	
+
 	_ = json.Unmarshal([]byte(layout_json), &layout)
-	
+
 	return layout
 }
 
 func find_focused_window(node Node, parent Node) Node {
-	node.Parent = &parent 
+	node.Parent = &parent
 	if node.Focused == false {
 		for _, child := range (node.Children) {
 			current_node := find_focused_window(child, node)
@@ -79,13 +79,13 @@ func go_all_the_way_left() {
 	parent := Node {
 	    Orientation: "",
 	}
-    
+
 	focused_window := find_focused_window(get_layout(), parent)
-	
+
 	if ! is_left_most_window(focused_window) {
 		focus_left()
 		go_all_the_way_left()
-	}	
+	}
 }
 
 func main()  {
